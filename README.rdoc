@@ -1,6 +1,39 @@
-= mobile_view_paths
+= Mobile view paths for Rails
 
-Description goes here.
+Based on http://erniemiller.org/2011/01/05/mobile-devices-and-rails-maintaining-your-sanity/
+
+First, let’s set up our mobile app at m.mydomain.com. Requests made to the “m” subdomain will use our mobile templates, if they exist. Once we have that working, we’ll handle user agent detection and allow toggling between the mobile and full version of our app (because sites that don’t allow you to get at the full version even when your device is capable of rendering it are downright rude).
+
+=== View Paths
+
+When Rails sets out to render one of our templates it looks for them in our controller’s array of view paths. Normally, this is going to contain app/views. View paths work much like the $PATH environment variable in your shell. If you type a command into your shell, your system goes through the directories listed in your $PATH, in order, and runs the first executable of the given name that it finds. Similarly, if Rails wants to render the action for widgets/index, it goes through your view paths in order, looking for a suitable candidate. If it finds app/views/widgets/index.html.erb, it will stop looking and render this file.
+
+This means that if we prepend app/mobile_views to the array of view paths, we can place our custom mobile view for our widget index into app/mobile_views/widgets/index.html.erb. When Rails finds this file, it won’t bother looking in app/views for our default template. However, if we don’t bother creating an app/mobile_views/widgets/show.html.erb file, we can fall back to using the one in app/views. Laziness satisfied!
+
+=== Prepending our Mobile View Path
+
+We can connect to m.mydomain.com (assuming our server is properly configured — I’d suggest ghosting m.[yourhostname].local if you’re testing locally on OS X) and our app will render from app/mobile_views before falling back to the standard app/views.
+
+We’re going to check if a user has specifically requested the mobile or full site in set_mobile_preferences, and if the user’s asked for the full site, we’ll store a “permanent” cookie that says so — this way the next time they visit our application from this device, they’ll immediately be in their preferred viewing format, because the next filter, redirect_to_mobile_if_applicable, only redirects if the request isn’t already being made to m.mydomain.com, the user hasn’t previously stored a cookie that says they’d like the full site, and the user agent appears to be a browser we’d like to redirect to the mobile site. You may want to season your mobile_browser? method to taste. The one I used here works well for my needs.
+
+The only thing that remains is to place a link allowing the mobile user to toggle between sites.
+
+=== View helpers
+
+The following view helpers are made available for switching site
+
+To insert link to the full site
+
+		<%= link_to_mobile_site %>
+
+And to link to the full site (only from mobile)
+
+		<%= link_to_full_site %>
+
+Translation keys: "app.view_mobile_site" and "app.view_full_site" respectively (for localization)
+Or you can explicitly set the label to use (takes any html).
+
+		<%= link_to_full_site 'Link to the big site' %>
 
 == Contributing to mobile_view_paths
  
